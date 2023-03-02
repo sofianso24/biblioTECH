@@ -18,13 +18,12 @@ const livreEmprunteSchema = new Schema (
          type : Date,
          required : true
        },
-       date_échéance : {
+       date_echeance : {
             type : Date,
             required : true
        },
        date_retour : {
         type : Date,
-        required: true
        }
     }
 )

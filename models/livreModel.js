@@ -21,7 +21,7 @@ const livreSchema = new Schema(
             required :true
         },
         copies_disponibles:{
-            type: String,
+            type: Number,
             required : true
         }
     }
