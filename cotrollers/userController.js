@@ -1,6 +1,7 @@
 import express from "express"
 import mongoose from "mongoose"
 import bcrypt from "bcrypt"
+import nodemailer from "nodemailer"
 import Jwt  from "jsonwebtoken"
 import {User} from "../models/userModel.js"
 import {Livre} from "../models/livreModel.js"
@@ -26,26 +27,38 @@ export const register = async (req, res) => {
   };
 
 
-  // sign in : 
+  // log in :
 
   export const sign_in = async (req, res) => {
-
     try {
       const user = await User.findOne({ email: req.body.email });
-      
-        if (!user) {
-            res.json("user not found")
-        } else {
-          const token = await bcrypt.compare(req.body.password,user.password).then((err, result) => {
-                result = sign({ email: user.email, fullName: user.fullName, _id: user._id, role:user.role }, 'RESTFULAPIs')
-                return result
-            })
-            res.cookie("token", { token, role: user.role }, { maxAge: 60 * 60 * 24 * 1000 }); // maxAge: 30 days
-            res.json("you're loged in")
-        }
-
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+  
+      if (!passwordMatch) {
+        return res.status(401).json({ message: 'Invalid credentials' });
+      }
+  
+      const token = sign({ email: user.email, fullName: user.fullName, _id: user._id, role: user.role }, 'RESTFULAPIs');
+      res.cookie('token', token, { maxAge: 60 * 60 * 24 * 1000 }); // maxAge: 30 days
+      res.json({ message: 'Logged in successfully' });
     } catch (error) {
-        res.json(err);
+      res.status(500).json({ message: 'Something went wrong' });
+    }
+  
+    try {
+      // send welcome email to new user
+      const user = await User.findOne({ email: req.body.email });
+      const subject = 'Welcome to the Library';
+      const text = `Dear ${user.fullName},\n\nWelcome to the library! We hope you enjoy our collection of books.\n\nSincerely,\nThe Library Team`;
+      sendEmailNotification(user.email, subject, text);
+    } catch (error) {
+      const user = await User.findOne({ email: req.body.email });
+      console.log(`Error sending welcome email to ${user.email}: ${error}`);
     }
   };
 
@@ -78,60 +91,6 @@ export const log_out = (req, res) => {
     }
   };
 
-// middleware to verify user role
-
-// export const verifyRole = (roles) => {
-//   return (req, res, next) => {
-//     const token = req.cookies.token;
-//     if (!token) {
-//       return res.status(401).json({ message: "Authentication failed" });
-//     }
-//     try {
-//       const decoded = verify(token.token, "RESTFULAPIs");
-//       if (!roles.includes(decoded.role)) {
-//         return res.status(403).json({ message: "Unauthorized" });
-//       }
-//       req.user = decoded;
-//       next();
-//     } catch (error) {
-//       return res.status(401).json({ message: "Authentication failed" });
-//     }
-//   };
-// };
-
-// // API endpoint to borrow a book
-// export const borrowBook = async (req, res) => {
-//   try {
-//     // check if user is an employee
-//     if (req.user.role !== "employee") {
-//       return res
-//         .status(403)
-//         .json({ message: "You are not authorized to perform this action" });
-//     }
-//     // borrow book logic here
-//     // ...
-//     res.json({ message: "Book borrowed successfully" });
-//   } catch (error) {
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
-
-// // API endpoint to return a book
-// export const returnBook = async (req, res) => {
-//   try {
-//     // check if user is an employee
-//     if (req.user.role !== "employee") {
-//       return res
-//         .status(403)
-//         .json({ message: "You are not authorized to perform this action" });
-//     }
-//     // return book logic here
-//     // ...
-//     res.json({ message: "Book returned successfully" });
-//   } catch (error) {
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
 
   // voir tous les livres disponibles : 
 
@@ -144,4 +103,30 @@ export const log_out = (req, res) => {
     }
   };
 
-  
+
+// send emails
+ 
+
+ const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'sofiane.bahmed.fabrikademy@gmail.com',
+    pass: 'ipygyjylsehkeqsh'
+  }
+});
+
+export const sendEmailNotification = async (toEmail, subject, text) => {
+  try {
+    const mailOptions = {
+      from: 'sofiane.bahmed.fabrikademy@gmail.com',
+      to: toEmail,
+      subject: subject,
+      text: text
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`Email sent to ${toEmail}`);
+  } catch (error) {
+    console.log(`Error sending email to ${toEmail}: ${error.message}`);
+  }
+};

@@ -26,7 +26,11 @@ const userShema = new Schema(
         type : String,
         enum : ["utilisateur","employe"],
         required : true
-     }
+     },
+     subscribed: {
+      type: Boolean,
+      default: false
+    }
     }
 )
 
