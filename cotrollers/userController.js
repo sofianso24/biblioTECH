@@ -19,6 +19,7 @@ export const register = async (req, res) => {
     try {
       const newUser = new User(req.body);
       newUser.password = await bcrypt.hash(req.body.password, 10);
+      newUser.subscribed = true;
       const user = await newUser.save();
       res.json(user);
     } catch (err) {

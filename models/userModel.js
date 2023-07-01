@@ -29,7 +29,7 @@ const userShema = new Schema(
      },
      subscribed: {
       type: Boolean,
-      default: false
+     
     }
     }
 )

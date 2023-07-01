@@ -10,5 +10,5 @@ export const livreEmprunteRouter = express.Router()
 
 livreEmprunteRouter.post("/emprunte",borrowBook)
 livreEmprunteRouter.post("/emprunte/return",returnBook)
-livreEmprunteRouter.get("/emprunte/history/:id",getBorrowingHistory)
-livreEmprunteRouter.post("/emprunte/renew/:id",renewBorrowedBook)
+livreEmprunteRouter.get("/emprunte/history/:userId",getBorrowingHistory)
+livreEmprunteRouter.post("/emprunte/renew/:borrowId",renewBorrowedBook)

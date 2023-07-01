@@ -186,9 +186,8 @@ export const returnBook = async (req, res) => {
      try{
          const {userId} = req.params;
 
-         const borrowingHistory = await LivreEmprunte.find({utilisateur:userId})
-         .populate('utilisateur','nom prenom email')
-         .populate('livre','titre auteur categorie');
+         const borrowingHistory = await LivreEmprunte.find({utilisateur:userId});
+         
          res.status(200).json(borrowingHistory);
      }catch(error){
         res.status(500).json({message:"something went wrong"})
